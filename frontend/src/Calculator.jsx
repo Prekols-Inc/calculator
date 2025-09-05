@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./Calculator.css";
 
+const error_msg = "Error";
+
 export default function Calculator() {
     const [expression, setExpression] = useState("");
 
@@ -8,8 +10,8 @@ export default function Calculator() {
         "7", "8", "9", "/",
         "4", "5", "6", "*",
         "1", "2", "3", "-",
-        "0", ".", "+",
-        "(", ")", "=", "C"
+        "0", "(", ")",
+        "+", ".", "=", "C"
     ];
 
     const handleClick = (value) => {
@@ -20,12 +22,17 @@ export default function Calculator() {
                 const result = eval(expression);
                 setExpression(String(result));
             } catch {
-                setExpression("Ошибка");
+                setExpression(error_msg);
             }
         } else {
-            setExpression(expression + value);
+            if (expression === error_msg) {
+                setExpression(value);
+            } else {
+                setExpression(expression + value);
+            }
         }
     };
+
 
     return (
         <div className="calculator">
