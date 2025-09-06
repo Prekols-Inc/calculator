@@ -8,8 +8,8 @@ app = Flask(__name__)
 app.config.from_object("config")
 db = SQLAlchemy(app)
 
-def error(code: int, message: str):
-    abort(Response(message, code))
+def error(code: HTTPStatus, message: str):
+    abort(Response(message, int(code)))
 
 class Calculation(db.Model):
     __tablename__ = "calculations"
@@ -52,9 +52,9 @@ def list_history():
     rows = store.all()
     payload = [
         {
-            "question": r.expression,
-            "answer": (r.result or "").replace("\n", ""),
-            "datetime": r.created_at.isoformat() if r.created_at else None,
+            "expression": r.expression,
+            "result": (r.result or "").replace("\n", ""),
+            "created_at": r.created_at.isoformat() if r.created_at else None,
         }
         for r in rows
     ]
@@ -66,12 +66,12 @@ def add_record():
     if not data:
         error(HTTPStatus.BAD_REQUEST, "No JSON provided")
     try:
-        expr = data["question"]
-        res = data["answer"]
+        expr = data["expression"]
+        res = data["result"]
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, f"Missing field: {e.args[0]}")
     if not isinstance(expr, str) or not isinstance(res, str):
-        error(HTTPStatus.BAD_REQUEST, "Fields 'question' and 'answer' must be strings")
+        error(HTTPStatus.BAD_REQUEST, "Fields 'expression' and 'result' must be strings")
 
     store.add(expr, res)
     return "done", HTTPStatus.CREATED
