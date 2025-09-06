@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./Calculator.css";
+import "./styles/Calculator.css";
+import { calculate } from "./API";
 
 const error_msg = "Error";
 
@@ -18,12 +19,13 @@ export default function Calculator() {
         if (value === "C") {
             setExpression("");
         } else if (value === "=") {
-            try {
-                const result = eval(expression);
-                setExpression(String(result));
-            } catch {
-                setExpression(error_msg);
-            }
+            calculate(expression)
+                .then((result) => {
+                    setExpression(String(result));
+                })
+                .catch(() => {
+                    setExpression(error_msg);
+                });
         } else {
             if (expression === error_msg) {
                 setExpression(value);

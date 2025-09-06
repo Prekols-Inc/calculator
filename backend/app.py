@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
 from typing import Any
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 bad_expression_msg = "Bad expression"
 json_error_msg = "Request must be JSON"
