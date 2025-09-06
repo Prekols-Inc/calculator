@@ -9,8 +9,7 @@ const API = axios.create({
 });
 
 export const calculate = async (expression) => {
-  try {
-    console.log(import.meta.env.VITE_API_URL);
+  try {;
     const response = await API.post('/v1/calculate', { expression });
     return response.data.result;
   } catch (error) {
@@ -23,22 +22,12 @@ export const calculate = async (expression) => {
   }
 };
 
-export const getHistory = async (expression) => {
+export const getHistory = async () => {
   try {
-    console.log(import.meta.env.VITE_API_URL);
-    const response = await API.post('/calculate', { expression });
-    return response.data.result;
+    const response = await API.get('/v1/history');
+    return response.data;
   } catch (error) {
-    console.error('Error in calculate request:', error);
+    console.error('Error in history request:', error);
     throw error;
   }
 };
-
-
-export const getHistoryStub = () => {
-  return [
-    { expression: "2+2", result: 2 + 2 },
-    { expression: "10/5", result: 10 / 5 }
-  ];
-};
-

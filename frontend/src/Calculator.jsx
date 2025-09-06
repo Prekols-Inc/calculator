@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { calculate, getHistoryStub } from "./API";
+import { calculate, getHistory } from "./API";
 import { ToastContainer } from "react-toastify";
 import "./styles/Calculator.css";
 
@@ -39,13 +39,14 @@ export default function Calculator() {
     };
 
     const openHistory = () => {
-        try {
-            const data = getHistoryStub();
-            setHistory(data);
-            setShowHistory(true);
-        } catch {
-            alert("Failed to load history");
-        }
+        getHistory()
+            .then((data) => {
+                setHistory(data);
+                setShowHistory(true);
+            })
+            .catch(() => {
+                alert("Failed to load history");
+            })
     };
 
     return (
