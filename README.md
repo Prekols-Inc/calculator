@@ -5,8 +5,6 @@
 Для работы приложения требуется запущенный сервер MySQL.  
 Самый простой способ поднять базу — через Docker.
 
-### Вариант 1: docker run
-
 ```bash
 docker run --name calculator-mysql \
   -e MYSQL_ROOT_PASSWORD=rootpass \
