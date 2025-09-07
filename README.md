@@ -1,25 +1,68 @@
 # calculator
 
-## Запуск базы данных (MySQL)
+## Build
 
-Для работы приложения требуется запущенный сервер MySQL.  
-Самый простой способ поднять базу — через Docker.
+### Backend
 
 ```bash
-docker run --name calculator-mysql \
-  -e MYSQL_ROOT_PASSWORD=rootpass \
+cd backend
+python3 -m venv .venv # create virtual environment
+source .venv/bin/activate # activate venv
+pip install # install all dependencies from requirements.txt
+
+python3 app.py # start server
+```
+
+### Frontend
+
+Dev build
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Release build
+
+```bash
+cd frontend
+npm install
+npm run build
+npm run preview
+```
+
+## Tests
+
+### Pytest command's
+
+```bash
+pytest -v # full output of the test results list
+pytest -q # brief summary of test results
+```
+
+## Database lauch (MySQL)
+
+To start MySQL in a Docker container run:
+```bash
+docker run --rm --name calculator-mysql \
+  -e MYSQL_ROOT_PASSWORD=passwd \
   -e MYSQL_DATABASE=calculator_db \
   -e MYSQL_USER=calc_user \
   -e MYSQL_PASSWORD=calc_pass \
   -p 3306:3306 \
   -d mysql:8
+```
 
-После запуска контейнера можно проверить, что база работает:
-
+Check for Docker container `calculator-mysql`: 
 ```bash
 docker ps
-Ожидаемый результат — запущенный контейнер calculator-mysql.
+```
+Expected output:
+```bash
+CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS                                                    NAMES
+aaa9d16acc03   mysql:8   "docker-entrypoint.s…"   5 seconds ago   Up 4 seconds   0.0.0.0:3306->3306/tcp, [::]:3306->3306/tcp, 33060/tcp   calculator-mysql
+```
 
-Чтобы подключиться внутрь контейнера и проверить базу:
-docker exec -it calculator-mysql mysql -u calc_user -p
-# вводим пароль: calc_pass
+To check database:
+docker exec -it calculator-mysql mysql -u <username> -p <password>
