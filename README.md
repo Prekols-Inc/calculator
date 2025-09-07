@@ -1,6 +1,6 @@
 # calculator
 
-## Build
+## Build (Linux)
 
 ### Backend
 
