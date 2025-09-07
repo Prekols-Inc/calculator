@@ -105,6 +105,23 @@ export default function Calculator() {
                                             <td>{item.date || new Date().toLocaleString()}</td>
                                             <td>{item.expression}</td>
                                             <td>{item.result}</td>
+                                            <td>
+                                                <button
+                                                    className="replay-btn"
+                                                    onClick={() => {
+                                                        setExpression(item.expression);
+                                                        setShowHistory(false);
+                                                    }}
+                                                >
+                                                    <img
+                                                        src="/reload.png"
+                                                        alt="Replay"
+                                                        className="replay-icon"
+                                                        width="20"
+                                                        height="20"
+                                                    />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
