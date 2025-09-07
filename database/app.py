@@ -8,8 +8,10 @@ app = Flask(__name__)
 app.config.from_object("config")
 db = SQLAlchemy(app)
 
+
 def error(code: HTTPStatus, message: str):
     abort(Response(message, int(code)))
+
 
 class Calculation(db.Model):
     __tablename__ = "calculations"
@@ -23,6 +25,7 @@ class Calculation(db.Model):
 
     def __repr__(self) -> str:
         return f"<{self.expression} = {self.result}>"
+
 
 class HistoryStore:
     def __init__(self, commit_every: int = 1):
@@ -45,7 +48,9 @@ class HistoryStore:
     def all(self):
         return Calculation.query.order_by(Calculation.created_at.desc()).all()
 
+
 store = HistoryStore(commit_every=1)
+
 
 @app.route("/history", methods=["GET"])
 def list_history():
@@ -60,6 +65,7 @@ def list_history():
     ]
     return jsonify({"calculations": payload})
 
+
 @app.route("/add", methods=["POST"])
 def add_record():
     data = request.get_json(silent=True)
@@ -71,10 +77,13 @@ def add_record():
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, f"Missing field: {e.args[0]}")
     if not isinstance(expr, str) or not isinstance(res, str):
-        error(HTTPStatus.BAD_REQUEST, "Fields 'expression' and 'result' must be strings")
+        error(
+            HTTPStatus.BAD_REQUEST, "Fields 'expression' and 'result' must be strings"
+        )
 
     store.add(expr, res)
     return "done", HTTPStatus.CREATED
+
 
 if __name__ == "__main__":
     with app.app_context():

@@ -32,16 +32,7 @@ npm run build
 npm run preview
 ```
 
-## Tests
-
-### Pytest command's
-
-```bash
-pytest -v # full output of the test results list
-pytest -q # brief summary of test results
-```
-
-## Database lauch (MySQL)
+## Database launch (MySQL)
 
 To start MySQL in a Docker container run:
 ```bash
@@ -64,5 +55,14 @@ CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS        
 aaa9d16acc03   mysql:8   "docker-entrypoint.s…"   5 seconds ago   Up 4 seconds   0.0.0.0:3306->3306/tcp, [::]:3306->3306/tcp, 33060/tcp   calculator-mysql
 ```
 
-To check database:
+To get into database:
+```bash
 docker exec -it calculator-mysql mysql -u <username> -p <password>
+```
+## Tests
+
+
+```bash
+pytest -v # full output of the test results list
+pytest -q # brief summary of test results
+```
