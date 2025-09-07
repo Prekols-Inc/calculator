@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { calculate, getHistory } from "./API";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "./styles/Calculator.css";
 
 const error_msg = "Error";
@@ -45,7 +45,7 @@ export default function Calculator() {
                 setShowHistory(true);
             })
             .catch(() => {
-                alert("Failed to load history");
+                toast.error("Failed to load history");
             })
     };
 
@@ -61,6 +61,7 @@ export default function Calculator() {
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
+                toastClassName="custom-toast"
             />
 
             <button className="history-btn" onClick={openHistory}>
