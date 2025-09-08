@@ -1,6 +1,6 @@
 # calculator
 
-![](image.png)
+![](assets/image.png)
 
 ## Build (Linux)
 
