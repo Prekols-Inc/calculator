@@ -35,6 +35,15 @@ paths:
                   - result
         "400":
           description: No expression in HTTP request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
 
   /history:
     get:
@@ -52,8 +61,6 @@ paths:
                     expression:
                       type: string
                     result:
-                      type: string
-                    timestamp:
                       type: string
                   required:
                     - expression
