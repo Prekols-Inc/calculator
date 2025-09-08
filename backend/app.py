@@ -100,6 +100,7 @@ def calculate_handler():
         add_record(expr, answer)
         return jsonify({"result": str(answer)}), 200
     else:
+        add_record(expr, "Error")
         return jsonify({"error": bad_expression_msg}), 400
 
 
