@@ -105,7 +105,7 @@ def calculate_handler():
 
 @app.route("/v1/history", methods=["GET"])
 def history_handler():
-    return jsonify({"calculations": list_history()})
+    return jsonify(list_history())
 
 
 if __name__ == "__main__":
