@@ -1,6 +1,7 @@
 import os
 from http import HTTPStatus
-from flask import Flask, jsonify, abort, request, Response
+import uuid
+from flask import Flask, jsonify, abort, request, Response, make_response
 from typing import Any
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -25,6 +26,7 @@ class Calculation(db.Model):
     __tablename__ = "calculations"
 
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(64), nullable=False, index=True)
     expression = db.Column(db.String(512), nullable=False)
     result = db.Column(db.String(256), nullable=False)
     created_at = db.Column(
@@ -40,8 +42,8 @@ class HistoryStore:
         self._buffer = []
         self._n = commit_every if commit_every > 0 else 1
 
-    def add(self, expression: str, result: str):
-        self._buffer.append(Calculation(expression=expression, result=result))
+    def add(self, expression: str, result: str, user_id: str):
+        self._buffer.append(Calculation(user_id=user_id, expression=expression, result=result))
         if len(self._buffer) >= self._n:
             db.session.add_all(self._buffer)
             db.session.commit()
@@ -53,15 +55,23 @@ class HistoryStore:
             db.session.commit()
             self._buffer.clear()
 
-    def all(self):
-        return Calculation.query.order_by(Calculation.created_at.desc()).all()
+    def all(self, user_id: str):
+        return (
+            Calculation.query.filter_by(user_id=user_id)
+            .order_by(Calculation.created_at.desc())
+            .all()
+        )
 
 
 store = HistoryStore(commit_every=1)
 
 
 def list_history() -> list[dict[str, Any]]:
-    rows = store.all()
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"calculations": []}
+    
+    rows = store.all(user_id)
     payload = [
         {
             "expression": r.expression,
@@ -73,8 +83,8 @@ def list_history() -> list[dict[str, Any]]:
     return payload
 
 
-def add_record(expr: str, res: str) -> bool:
-    store.add(expr, res)
+def add_record(expr: str, res: str, user_id:str) -> bool:
+    store.add(expr, res, user_id)
 
     return True
 
@@ -95,13 +105,23 @@ def calculate_handler():
         return jsonify({"error": json_error_msg}), 400
 
     expr = request.get_json().get("expression")
+
+    user_id = request.cookies.get("user_id")
+    new_cookie = False
+    if not user_id:
+        user_id = str(uuid.uuid4())
+        new_cookie = True
+
     result, answer = calculate(expr)
     if result:
-        add_record(expr, answer)
-        return jsonify({"result": str(answer)}), 200
+        add_record(expr, answer, user_id)
+        resp = make_response(jsonify({"result": str(answer)}), 200)
     else:
-        add_record(expr, "Error")
-        return jsonify({"error": bad_expression_msg}), 400
+        add_record(expr, "Error", user_id)
+        resp = make_response(jsonify({"error": bad_expression_msg}), 400)
+    if new_cookie:
+        resp.set_cookie("user_id", user_id)
+    return resp
 
 
 @app.route("/v1/history", methods=["GET"])
