@@ -9,13 +9,14 @@ from sqlalchemy.sql import func
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 app.config.from_object("config")
 db = SQLAlchemy(app)
 
 bad_expression_msg = "Bad expression"
 json_error_msg = "Request must be JSON"
+user_id_cookie_name = "user_id"
 
 
 def error(code: HTTPStatus, message: str):
@@ -43,7 +44,9 @@ class HistoryStore:
         self._n = commit_every if commit_every > 0 else 1
 
     def add(self, expression: str, result: str, user_id: str):
-        self._buffer.append(Calculation(user_id=user_id, expression=expression, result=result))
+        self._buffer.append(
+            Calculation(user_id=user_id, expression=expression, result=result)
+        )
         if len(self._buffer) >= self._n:
             db.session.add_all(self._buffer)
             db.session.commit()
@@ -66,29 +69,6 @@ class HistoryStore:
 store = HistoryStore(commit_every=1)
 
 
-def list_history() -> list[dict[str, Any]]:
-    user_id = request.cookies.get("user_id")
-    if not user_id:
-        return {"calculations": []}
-    
-    rows = store.all(user_id)
-    payload = [
-        {
-            "expression": r.expression,
-            "result": (r.result or "").replace("\n", ""),
-            "created_at": r.created_at.isoformat() if r.created_at else None,
-        }
-        for r in rows
-    ]
-    return payload
-
-
-def add_record(expr: str, res: str, user_id:str) -> bool:
-    store.add(expr, res, user_id)
-
-    return True
-
-
 def calculate(expr: str) -> tuple[bool, Any]:
     try:
         answer = eval(expr)
@@ -106,27 +86,40 @@ def calculate_handler():
 
     expr = request.get_json().get("expression")
 
-    user_id = request.cookies.get("user_id")
-    new_cookie = False
+    user_id = request.cookies.get(user_id_cookie_name)
+    set_cookie = False
     if not user_id:
         user_id = str(uuid.uuid4())
-        new_cookie = True
+        set_cookie = True
 
     result, answer = calculate(expr)
     if result:
-        add_record(expr, answer, user_id)
+        store.add(expr, answer, user_id)
         resp = make_response(jsonify({"result": str(answer)}), 200)
     else:
-        add_record(expr, "Error", user_id)
+        store.add(expr, "Error", user_id)
         resp = make_response(jsonify({"error": bad_expression_msg}), 400)
-    if new_cookie:
-        resp.set_cookie("user_id", user_id)
+    if set_cookie:
+        resp.set_cookie(user_id_cookie_name, user_id)
     return resp
 
 
 @app.route("/v1/history", methods=["GET"])
 def history_handler():
-    return jsonify(list_history())
+    user_id = request.cookies.get(user_id_cookie_name)
+    if not user_id:
+        return jsonify([])
+
+    rows = store.all(user_id)
+    payload = [
+        {
+            "expression": r.expression,
+            "result": (r.result or "").replace("\n", ""),
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+    return jsonify(payload)
 
 
 if __name__ == "__main__":
