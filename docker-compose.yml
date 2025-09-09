@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: calculator-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: passwd
+      MYSQL_DATABASE: calculator_db
+      MYSQL_USER: calc_user
+      MYSQL_PASSWORD: calc_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - calculator-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppasswd"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    image: ${{ secrets.DOCKERHUB_USERNAME }}/calculator-backend:latest
+    container_name: calculator-backend
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: calc_user
+      MYSQL_PASSWORD: calc_pass
+      MYSQL_DATABASE: calculator_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - calculator-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'echo > /dev/tcp/localhost/5000' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  frontend:
+    image: ${{ secrets.DOCKERHUB_USERNAME }}/calculator-frontend:latest
+    container_name: calculator-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - calculator-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  calculator-network:
+    driver: bridge

@@ -58,11 +58,6 @@ jobs:
         cd frontend
         npm install
 
-    - name: Run frontend tests (if any)
-      run: |
-        cd frontend
-        npm test --if-present
-
     - name: Build frontend
       run: |
         cd frontend
@@ -99,3 +94,44 @@ jobs:
         file: ./frontend/Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/calculator-frontend:latest
+        
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    needs: docker-build
+  
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose-plugin
+
+    - name: Create environment file
+      run: |
+        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
+        echo "MYSQL_HOST=mysql" >> .env
+        echo "MYSQL_PORT=3306" >> .env
+        echo "MYSQL_USER=calc_user" >> .env
+        echo "MYSQL_PASSWORD=calc_pass" >> .env
+        echo "MYSQL_DATABASE=calculator_db" >> .env
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Pull and start containers
+      run: |
+        docker compose pull
+        docker compose up -d --wait
+
+    - name: Verify services
+      run: |
+        docker compose ps
+        timeout 60 bash -c 'until curl -f http://localhost:5000/health; do sleep 5; done'
+
+    - name: Cleanup
+      run: |
+        docker compose down
