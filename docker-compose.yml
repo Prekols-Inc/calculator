@@ -24,7 +24,7 @@ services:
       start_period: 30s
 
   backend:
-    image: ${{ secrets.DOCKERHUB_USERNAME }}/calculator-backend:latest
+    image: $DOCKERHUB_USERNAME/calculator-backend:latest
     container_name: calculator-backend
     ports:
       - "5000:5000"
@@ -48,7 +48,7 @@ services:
       start_period: 40s
 
   frontend:
-    image: ${{ secrets.DOCKERHUB_USERNAME }}/calculator-frontend:latest
+    image: $DOCKERHUB_USERNAME/calculator-frontend:latest
     container_name: calculator-frontend
     ports:
       - "80:80"
