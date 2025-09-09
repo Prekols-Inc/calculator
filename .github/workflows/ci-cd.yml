@@ -3,7 +3,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main, ci/cd]
-
+  pull_request:
+    branches: [ "*" ]
+    
 jobs:
   test-backend:
     runs-on: ubuntu-latest
@@ -11,10 +13,11 @@ jobs:
       mysql:
         image: mysql:8
         env:
-          MYSQL_ROOT_PASSWORD: passwd
-          MYSQL_DATABASE: calculator_db
-          MYSQL_USER: calc_user
-          MYSQL_PASSWORD: calc_pass
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -39,9 +42,9 @@ jobs:
       env:
         MYSQL_HOST: localhost
         MYSQL_PORT: 3306
-        MYSQL_USER: calc_user
-        MYSQL_PASSWORD: calc_pass
-        MYSQL_DATABASE: calculator_db
+        MYSQL_USER: ${{ secrets.MYSQL_USER }}
+        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
 
   test-frontend:
     runs-on: ubuntu-latest
