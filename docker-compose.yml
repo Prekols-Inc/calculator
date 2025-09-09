@@ -5,10 +5,10 @@ services:
     image: mysql:8
     container_name: calculator-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: passwd
-      MYSQL_DATABASE: calculator_db
-      MYSQL_USER: calc_user
-      MYSQL_PASSWORD: calc_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-passwd}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-calculator_db}
+      MYSQL_USER: ${MYSQL_USER:-calc_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-calc_pass}
     ports:
       - "3306:3306"
     volumes:
@@ -17,23 +17,23 @@ services:
       - calculator-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppasswd"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-passwd}"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
 
   backend:
-    image: $DOCKERHUB_USERNAME/calculator-backend:latest
+    image: ${DOCKERHUB_USERNAME:-sid00r}/calculator-backend:latest
     container_name: calculator-backend
     ports:
       - "5000:5000"
     environment:
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
-      MYSQL_USER: calc_user
-      MYSQL_PASSWORD: calc_pass
-      MYSQL_DATABASE: calculator_db
+      MYSQL_USER: ${MYSQL_USER:-calc_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-calc_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-calculator_db}
     depends_on:
       mysql:
         condition: service_healthy
@@ -48,7 +48,7 @@ services:
       start_period: 40s
 
   frontend:
-    image: $DOCKERHUB_USERNAME/calculator-frontend:latest
+    image: ${DOCKERHUB_USERNAME:-sid00r}/calculator-frontend:latest
     container_name: calculator-frontend
     ports:
       - "80:80"
