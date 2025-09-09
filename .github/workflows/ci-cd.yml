@@ -102,48 +102,42 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Docker Compose
-      uses: docker/setup-compose-action@v1
-      with:
-        version: latest
-        
-    - name: Install envsubst
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gettext-base
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
 
-    - name: Create environment file
-      run: |
-        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
-        echo "MYSQL_HOST=mysql" >> .env
-        echo "MYSQL_PORT=3306" >> .env
-        echo "MYSQL_USER=calc_user" >> .env
-        echo "MYSQL_PASSWORD=calc_pass" >> .env
-        echo "MYSQL_DATABASE=calculator_db" >> .env
-
-    - name: Login to Docker Hub
+    - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Pull and start containers
+    - name: Create .env file
       run: |
-        envsubst < docker-compose.yml > docker-compose-resolved.yml
-        docker compose -f docker-compose-resolved.yml pull
-        docker compose -f docker-compose-resolved.yml up -d --wait
+        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
+        echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+        echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+        echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+        echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+        echo "MYSQL_HOST=mysql" >> .env
+        echo "MYSQL_PORT=3306" >> .env
 
-    - name: Check services status
+    - name: Verify .env file
       run: |
-        docker compose -f docker-compose-resolved.yml ps
-        docker compose -f docker-compose-resolved.yml logs backend
+        echo "Generated .env file content:"
+        cat .env
+        echo ""
 
-    - name: Test backend health
+    - name: Pull latest images
       run: |
-        sudo apt-get update
-        sudo apt-get install -y curl
-        curl --retry 5 --retry-delay 10 --retry-all-errors http://localhost:5000/health || echo "Health check failed but continuing"
+        docker compose pull
 
-    - name: Stop services
+    - name: Deploy with Docker Compose
       run: |
-        docker compose -f docker-compose-resolved.yml down
+        docker compose down
+        docker compose up -d
+
+    - name: Verify deployment
+      run: |
+        sleep 10
+        docker compose ps
+        docker compose logs --tail=50
