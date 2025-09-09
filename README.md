@@ -8,9 +8,10 @@
 
 ```bash
 cd backend
+sudo apt install python3.11-venv
 python3 -m venv .venv # create virtual environment
 source .venv/bin/activate # activate venv
-pip install # install all dependencies from requirements.txt
+pip install -r requirements.txt# install all dependencies from requirements.txt
 
 python3 app.py # start server
 ```
@@ -21,6 +22,8 @@ Dev build
 
 ```bash
 cd frontend
+sudo apt install nodejs
+sudo apt install npm
 npm install
 npm run dev
 ```
@@ -29,6 +32,8 @@ Release build
 
 ```bash
 cd frontend
+sudo apt install nodejs
+sudo apt install npm
 npm install
 npm run build
 npm run preview
