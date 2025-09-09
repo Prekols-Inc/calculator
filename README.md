@@ -1,5 +1,7 @@
 # calculator
 
+![](assets/image.png)
+
 ## Build (Linux)
 
 ### Backend
