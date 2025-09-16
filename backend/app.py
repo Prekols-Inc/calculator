@@ -14,6 +14,9 @@ CORS(app, supports_credentials=True)
 app.config.from_object("config")
 db = SQLAlchemy(app)
 
+with app.app_context():
+    db.create_all()
+
 bad_expression_msg = "Bad expression"
 json_error_msg = "Request must be JSON"
 user_id_cookie_name = "user_id"
@@ -81,6 +84,9 @@ def calculate(expr: str) -> tuple[bool, Any]:
 
 @app.route("/v1/calculate", methods=["POST"])
 def calculate_handler():
+    with app.app_context():
+        db.create_all()
+        
     if not request.is_json:
         return jsonify({"error": json_error_msg}), 400
 
