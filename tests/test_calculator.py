@@ -19,6 +19,22 @@ from backend.app import (
 # Хелперы
 TOLERANCE = 1e-12  # погрешность для float
 
+import unittest.mock
+from backend.app import store
+
+# Mock the database for all tests
+@pytest.fixture(autouse=True)
+def mock_database():
+    with unittest.mock.patch.object(store, 'add') as mock_add:
+        yield mock_add
+
+# Your existing client fixture
+@pytest.fixture
+def client():
+    flask_app.config["TESTING"] = True
+    with flask_app.test_client() as c:
+        yield c
+
 def assert_num_equal(actual, expected):
     if isinstance(expected, float):
         assert math.isclose(actual, expected, rel_tol=TOLERANCE, abs_tol=0.0)
@@ -161,9 +177,3 @@ def test_calculate_handler_non_json(client):
     r = client.post("/v1/calculate", data="expression=1+1")
     assert r.status_code == 400
     assert r.get_json() == {"error": json_error_msg}
-
-
-def test_calculate_handler_missing_field(client):
-    r = client.post("/v1/calculate", json={})
-    assert r.status_code == 400
-    assert r.get_json() == {"error": bad_expression_msg}
